@@ -1,0 +1,125 @@
+<<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Estado de Cuenta</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <img src="logo.jpg" class="img-logo" alt="Logo">
+        </div>
+        <h1>Portal Estado de Cuenta</h1>
+    </header>
+
+    <div class="container">
+        <div class="card login-section">
+            <h3>Acceso de Usuario</h3>
+            <input type="text" id="inputNIT" placeholder="Ingrese su NIT" class="input-field">
+            <input type="password" placeholder="Contraseña" class="input-field">
+        </div>
+
+        <div class="card filter-section">
+            <h3>Fecha de Búsqueda</h3>
+            <div class="date-group">
+                <div>
+                    <label>Fecha Inicio:</label>
+                    <input type="date" id="fechaInicio" class="input-field">
+                </div>
+                <div>
+                    <label>Fecha Fin:</label>
+                    <input type="date" id="fechaFin" class="input-field">
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button onclick="filtrarYDescargar()" class="btn-print" style="cursor: pointer;">
+                Descargar Reporte
+            </button>
+        </div>
+    </div>
+
+    <script>
+    async function filtrarYDescargar() {
+    const nitIngresado = document.getElementById('inputNIT').value.trim();
+    const passIngresada = document.querySelector('input[type="password"]').value;
+    const inputInicio = document.getElementById('fechaInicio').value;
+    const inputFin = document.getElementById('fechaFin').value;
+
+    if (!nitIngresado || !passIngresada) {
+        alert("🔑 Ingrese NIT y Contraseña para continuar.");
+        return;
+    }
+
+    try {
+        const response = await fetch('estado_cuenta_FINAL.xlsx');
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { cellDates: true });
+
+        // 1. VALIDACIÓN DE CREDENCIALES
+        const hojaSeguridad = workbook.Sheets["Seguridad"];
+        const usuarios = XLSX.utils.sheet_to_json(hojaSeguridad);
+        
+        // Buscamos si el NIT y Password coinciden en la hoja de contraseñas
+        const accesoValido = usuarios.find(u => 
+            String(u.NIT).trim() === nitIngresado && 
+            String(u.password).trim() === passIngresada
+        );
+
+        if (!accesoValido) {
+            alert("❌ NIT o Contraseña incorrectos. Verifique sus datos.");
+            return;
+        }
+
+        // 2. SI EL ACCESO ES CORRECTO, PROCEDER AL FILTRO DE DATOS
+        if (!inputInicio || !inputFin) {
+            alert("📅 Seleccione un rango de fechas para el reporte.");
+            return;
+        }
+
+        const hojaDatos = workbook.Sheets["Reporte"];
+        const registros = XLSX.utils.sheet_to_json(hojaDatos);
+        
+        const fechaLimiteInicio = new Date(inputInicio.replace(/-/g, '\/'));
+        const fechaLimiteFin = new Date(inputFin.replace(/-/g, '\/'));
+        fechaLimiteFin.setHours(23, 59, 59);
+
+        const resultados = registros.filter(fila => {
+            const nitFila = String(fila['NIT'] || '').trim();
+            if (nitFila !== nitIngresado) return false;
+
+            let fechaFila;
+            let fechaCelda = fila['Fecha de creacion'];
+            if (typeof fechaCelda === 'string') {
+                const partes = fechaCelda.split('/');
+                fechaFila = new Date(partes[2], partes[1] - 1, partes[0]);
+            } else {
+                fechaFila = fechaCelda;
+            }
+
+            return fechaFila >= fechaLimiteInicio && fechaFila <= fechaLimiteFin;
+        });
+
+        if (resultados.length === 0) {
+            alert("No se encontraron facturas para este periodo.");
+            return;
+        }
+
+        // 3. GENERAR EXCEL DE DESCARGA
+        const nuevaHoja = XLSX.utils.json_to_sheet(resultados);
+        const nuevoLibro = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(nuevoLibro, nuevaHoja, "Reporte");
+        XLSX.writeFile(nuevoLibro, `Estado_Cuenta_${nitIngresado}.xlsx`);
+
+    } catch (error) {
+        alert("❌ Error al procesar el acceso: " + error.message);
+    }
+}
+    </script>
+</body>
+</html>

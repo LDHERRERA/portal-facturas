@@ -1,0 +1,76 @@
+/* Configuraciones básicas */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e9ecef;
+    margin: 0;
+    padding: 0;
+}
+
+/* El encabezado azul oscuro */
+.navbar {
+    background-color: #12098f;
+    color: white;
+    padding: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* El contenedor central */
+.container {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+/* Estilo de los "recuadros" (Cards) */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+/* Los campos de texto y selección */
+.input-field {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: block;
+    box-sizing: border-box; /* Importante para el tamaño */
+}
+
+/* Alineación de las fechas una al lado de la otra */
+.date-group {
+    display: flex;
+    gap: 15px;
+}
+
+.date-group div {
+    flex: 1;
+}
+
+/* El botón verde */
+.btn-print {
+    background-color: #28a745;
+    color: white;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.btn-print:hover {
+    background-color: #218838;
+}
+/* Controlamos el tamaño del logo */
+.img-logo {
+    height: 150px;       /* Puedes cambiar el 50 por el tamaño que prefieras */
+    width: auto;        /* Esto mantiene la proporción para que no se vea estirado */
+    display: block;
+}
